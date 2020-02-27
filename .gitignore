@@ -1,0 +1,13 @@
+bin
+obj
+html
+*.zip
+README.html
+
+# Foundation ignores for code I don't use
+jquery.js
+what-input.js
+foundation.min.js
+foundation.js
+app.js
+index.html
