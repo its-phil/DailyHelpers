@@ -99,22 +99,22 @@ namespace DailyHelpers.Mvvm
 
     public void AddRangeNew(IReadOnlyList<T> items)
     {
+      SuppressEvents = true;
+      Clear();
       if (items.Count > 0)
-      {
-        SuppressEvents = true;
-        Clear();
         AddRange(items);
-      }
+
+      SuppressEvents = false;
     }
 
     public void AddRangeNew(IEnumerable<T> items)
     {
+      SuppressEvents = true;
+      Clear();
       if (items.Count() > 0)
-      {
-        SuppressEvents = true;
-        Clear();
         AddRange(items);
-      }
+
+      SuppressEvents = false;
     }
   }
 }
