@@ -9,25 +9,27 @@ else
 Write-Host $("Root directory is $rootDir")
 
 # Get the maximum directory name length for correct indentation
-Get-ChildItem -Directory -Path $rootDir | Foreach-Object {
-    if (Test-Path "$($rootDir)\$($_)\.git")
+ForEach ($dir in Get-ChildItem -Directory -Path $rootDir)
+{
+    if (Test-Path "$($rootDir)\$($dir)\.git")
     {
-        if ($_.Name.Length -gt $maxWidth)
+        if ($dir.Name.Length -gt $maxWidth)
         {
-            $maxWidth = $_.Name.Length
+            $maxWidth = $dir.Name.Length
         }
     }
 }
 $maxWidth = -$maxWidth - 2 # magic transformation ;)
 
 # Print the current branch of all git repos
-Get-ChildItem -Directory -Path $rootDir | Foreach-Object {
-    if (Test-Path "$($rootDir)\$($_)\.git")
+ForEach ($dir in Get-ChildItem -Directory -Path $rootDir) 
+{
+    if (Test-Path "$($rootDir)\$($dir)\.git")
     {
-        Set-Location "$($rootDir)\$_"
+        Set-Location "$($rootDir)\$dir"
         
         $branch = Invoke-Expression "git rev-parse --abbrev-ref HEAD"
-        Write-Host $( "> Directory {0,$($maxWidth)}" -f "$($_):") -NoNewLine
+        Write-Host $( "> Directory {0,$($maxWidth)}" -f "$($dir):") -NoNewLine
         
         if ($branch -eq "master") 
         {

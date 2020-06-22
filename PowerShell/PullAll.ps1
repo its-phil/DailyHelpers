@@ -8,11 +8,12 @@ else
 }
 Write-Host $("Root directory is $rootDir")
 
-Get-ChildItem -Directory -Path $rootDir | Foreach-Object {
-    if (Test-Path "$($rootDir)\$($_)\.git")
+ForEach ($dir in Get-ChildItem -Directory -Path $rootDir)
+{
+    if (Test-Path "$($rootDir)\$($dir)\.git")
     {
-        Write-Host "> Pulling $($_)" -ForegroundColor Green
-        Set-Location "$($rootDir)\$_"
+        Write-Host "> Pulling $($dir)" -ForegroundColor Green
+        Set-Location "$($rootDir)\$dir"
         git pull
         Set-Location ..
     }
