@@ -1,4 +1,5 @@
 import os
+import subprocess
 import sys
 import tkinter as tk
 from pygit2 import Repository
@@ -71,7 +72,8 @@ class Application(tk.Frame):
 
     def updateCurrentBranches(self):
         for repo in self.gitRepos:
-            repo["branch"] = Repository(repo["path"]).head.shorthand
+            r = Repository(repo["path"])
+            repo["branch"] = r.head.shorthand
 
     def updateRepoList(self):
         # Display the repositories in the repo list
@@ -88,6 +90,7 @@ class Application(tk.Frame):
             if repo["branch"] == "develop":
                 branchLabel.configure(fg=self.theme.fgDevelopBranch)
             branchLabel.grid(row=row, column=1, sticky="W")
+
             row += 1
 
     def showBranches(self):
@@ -96,6 +99,11 @@ class Application(tk.Frame):
 
     def pullAll(self):
         print("Pulling all repos")
+
+        repo = self.gitRepos[0]
+        result = subprocess.run(
+            ['git', 'pull', repo['path']], stdout=subprocess.PIPE)
+        print(result.stdout.decode('utf-8'))
 
 
 if __name__ == "__main__":
