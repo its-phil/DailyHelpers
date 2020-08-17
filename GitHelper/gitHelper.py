@@ -1,5 +1,6 @@
-import tkinter as tk
+import os
 import sys
+import tkinter as tk
 
 
 class Application(tk.Frame):
@@ -37,7 +38,17 @@ class Application(tk.Frame):
         self.repoList.pack(fill="both", expand=True)
 
     def discoverRepos(self):
-        print("Discovering repositories")
+        print("Discovering repositories...")
+
+        self.gitRepos = []
+        for dir in os.listdir(self.basePath):
+            sys.stdout.write(f"   Analyzing '{dir}'")
+            candidate = os.path.join(self.basePath, dir)
+            if ".git" in os.listdir(candidate):
+                print(" is a git repo.")
+                self.gitRepos.append({"name": dir, "path": candidate})
+            else:
+                print(" is not a git repo.")
 
     def showBranches(self):
         print("Showing branches")
@@ -56,4 +67,4 @@ if __name__ == "__main__":
 
     root = tk.Tk()
     app = Application(basePath=basePath, root=root)
-    app.mainloop()
+    # app.mainloop()
