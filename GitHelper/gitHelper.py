@@ -11,7 +11,10 @@ class Theme:
         self.fgDevelopBranch = "green"
         self.fgOtherBranch = "orange"
         self.fgError = "red"
+        self.fgLogHeading = "blue"
         self.fontRepo = "Consolas 12"
+        self.fontLogHeading = "Consolas 11 bold"
+        self.fontLogMessage = "Consolas 10"
 
 
 class Application(tk.Frame):
@@ -54,8 +57,14 @@ class Application(tk.Frame):
             self.toolBar, text="pull all", command=self.pullAll)
         self.pullAllButton.pack(side="left")
 
-        self.repoList = tk.Frame(self.root)
-        self.repoList.pack(fill="both", expand=True)
+        self.contentFrame = tk.Frame(self.root)
+        self.contentFrame.pack(fill="both", expand=True)
+
+        self.repoList = tk.LabelFrame(self.contentFrame, text="Repositories")
+        self.repoList.place(relwidth=.5, relheight=1)
+
+        self.logView = tk.LabelFrame(self.contentFrame, text="Log")
+        self.logView.place(relx=.5, relwidth=.5, relheight=1)
 
     def listRepoDirs(self):
         return [
@@ -94,7 +103,8 @@ class Application(tk.Frame):
         self.clearFrame(self.repoList)
         row = 0
         for repo in self.gitRepos:
-            nameLabel = tk.Label(self.repoList, text=repo["name"], font=self.theme.fontRepo, padx=10)
+            nameLabel = tk.Label(
+                self.repoList, text=repo["name"], font=self.theme.fontRepo, padx=10)
             nameLabel.grid(row=row, column=0, sticky="W")
 
             branchLabel = tk.Label(
@@ -116,10 +126,31 @@ class Application(tk.Frame):
     def pullAll(self):
         print("Pulling all repos")
 
-        repo = self.gitRepos[0]
-        result = subprocess.run(
-            ['git', 'pull', repo['path']], stdout=subprocess.PIPE)
-        print(result.stdout.decode('utf-8'))
+        self.clearFrame(self.logView)
+
+        row = 0
+        for repo in self.gitRepos:
+            # Pull the repo and gather the result
+            # result = subprocess.run(
+            #    ['git', 'pull', repo['path']], stdout=subprocess.PIPE)
+
+            result = subprocess.run(
+                ['git', 'pull'], cwd=repo['path'], stdout=subprocess.PIPE)
+            resultMsg = result.stdout.decode('utf-8')
+            print(resultMsg)
+
+            # Add a label for the repo name
+            nameLabel = tk.Label(
+                self.logView, text=repo["name"], font=self.theme.fontLogHeading, padx=10, fg=self.theme.fgLogHeading)
+            nameLabel.grid(row=row, column=0, sticky="W")
+            row += 1
+            # Add a label for the message
+            msgLabel = tk.Label(
+                self.logView, text=resultMsg, font=self.theme.fontLogMessage, padx=10)
+            msgLabel.grid(row=row, column=0, sticky="W")
+            row += 1
+
+            self.root.update()
 
 
 if __name__ == "__main__":
