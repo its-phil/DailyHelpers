@@ -10,6 +10,8 @@ class Theme:
         self.fgMasterBranch = "blue"
         self.fgDevelopBranch = "green"
         self.fgOtherBranch = "orange"
+        self.fgError = "red"
+        self.fontRepo = "Consolas 12"
 
 
 class Application(tk.Frame):
@@ -55,40 +57,54 @@ class Application(tk.Frame):
         self.repoList = tk.Frame(self.root)
         self.repoList.pack(fill="both", expand=True)
 
+    def listRepoDirs(self):
+        return [
+            d for d in (os.path.join(self.basePath, d1) for d1 in os.listdir(self.basePath))
+            if os.path.isdir(d)
+        ]
+
     def discoverRepos(self):
         print("Discovering repositories...")
 
         # Collect data on the repositories in the given base directory
         self.gitRepos = []
-        for dir in os.listdir(self.basePath):
+        for dir in self.listRepoDirs():
             sys.stdout.write(f"   Analyzing '{dir}'")
             candidate = os.path.join(self.basePath, dir)
-            if ".git" in os.listdir(candidate):
-                print(" is a git repo.")
-                self.gitRepos.append(
-                    {"name": dir, "path": candidate, "branch": "---"})
-            else:
-                print(" is not a git repo.")
+            try:
+                if ".git" in os.listdir(candidate):
+                    print(" is a git repo.")
+                    self.gitRepos.append(
+                        {"name": dir, "path": candidate, "branch": "---"})
+                else:
+                    print(" is not a git repo.")
+            except Exception as e:
+                print(f" error occurred: '{str(e)}'")
 
     def updateCurrentBranches(self):
         for repo in self.gitRepos:
-            r = Repository(repo["path"])
-            repo["branch"] = r.head.shorthand
+            try:
+                r = Repository(repo["path"])
+                repo["branch"] = r.head.shorthand
+            except Exception as e:
+                repo["branch"] = f"ERROR: {str(e)}"
 
     def updateRepoList(self):
         # Display the repositories in the repo list
         self.clearFrame(self.repoList)
         row = 0
         for repo in self.gitRepos:
-            nameLabel = tk.Label(self.repoList, text=repo["name"])
+            nameLabel = tk.Label(self.repoList, text=repo["name"], font=self.theme.fontRepo, padx=10)
             nameLabel.grid(row=row, column=0, sticky="W")
 
             branchLabel = tk.Label(
-                self.repoList, text=repo["branch"], fg=self.theme.fgOtherBranch)
+                self.repoList, text=repo["branch"], fg=self.theme.fgOtherBranch, font=self.theme.fontRepo)
             if repo["branch"] == "master":
                 branchLabel.configure(fg=self.theme.fgMasterBranch)
             if repo["branch"] == "develop":
                 branchLabel.configure(fg=self.theme.fgDevelopBranch)
+            if repo["branch"].startswith("ERROR: "):
+                branchLabel.configure(fg=self.theme.fgError)
             branchLabel.grid(row=row, column=1, sticky="W")
 
             row += 1
