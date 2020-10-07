@@ -14,7 +14,7 @@ ForEach ($dir in Get-ChildItem -Directory -Path $rootDir)
     {
         Write-Host "> Pulling $($dir)" -ForegroundColor Green
         Set-Location "$($rootDir)\$dir"
-        git pull
+        git pull --all --prune
         Set-Location ..
     }
 }
