@@ -1,22 +1,18 @@
-if ($args.Count -eq 1)
-{
+if ($args.Count -eq 1) {
     $rootDir = $args[0]
 }
-else
-{
+else {
     $rootDir = "."    
 }
+$rootDir = Resolve-Path $rootDir
 Write-Host $("Root directory is $rootDir")
 
-ForEach ($dir in Get-ChildItem -Directory -Path $rootDir)
-{
-    if (Test-Path "$($rootDir)\$($dir)\.git")
-    {
-        Write-Host "> Pulling $($dir)" -ForegroundColor Green
-        Set-Location "$($rootDir)\$dir"
-        git pull
-        Set-Location ..
+ForEach ($dir in Get-ChildItem -Directory -Path $rootDir) {
+    $testPath = "$($dir)/.git"
+    if (Test-Path $testPath) {
+        Write-Host "> Pulling $($dir.Name)" -ForegroundColor Green
+        Set-Location $dir
+        git pull --all --prune
     }
+    Set-Location $rootDir
 }
-
-Read-Host -Prompt "Press Enter to exit"
