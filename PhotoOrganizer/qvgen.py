@@ -5,6 +5,8 @@ from colorama import Fore, Back, Style
 
 # Prerequesites:
 # - pip install colorama
+# - install rawtherapee (e.g. apt install rawtherapee)
+# - set rawtherapee default profile to "Standard Film Curve - ISO Medium" (Preferences > Image Processing > Default Processing Profile)
 
 
 def printOneIntArg(prefix: str, arg: int, postfix: str, indent: int = 0):
@@ -54,22 +56,10 @@ def isSidecarFile(entry: os.DirEntry) -> bool:
     return name.endswith(".xmp")
 
 
-# We define that a raw file has a matching image file if
-# - there is an image file with the same file name (e.g. file1.dng and file1.jpg are a match)
-# - there is a quick-view image file with the same file name (e.g. file1.dng and file1_qv.jpg are a match)
-def hasMatchingImageFile(rawFileName: str, imageFiles) -> os.DirEntry:
-    rawFileName = rawFileName.lower()
-    rawQvFileName = rawFileName + "_qv"
+def hasMatchingQvFile(fileName: str, imageFiles) -> os.DirEntry:
+    qvName = fileName.lower() + "_qv"
     for imageFile in imageFiles:
-        imageFileName = os.path.splitext(imageFile.name)[0].lower()
-        if imageFileName == rawFileName or imageFileName == rawQvFileName:
-            return True
-    return False
-
-
-def hasMatchingSidecarFile(fileName: str, rawFiles) -> os.DirEntry:
-    for rawFile in rawFiles:
-        if rawFile.name.lower() == fileName.lower():
+        if os.path.splitext(imageFile.name)[0].lower() == qvName:
             return True
     return False
 
@@ -106,65 +96,51 @@ for root, dirs, files in os.walk(rootPath):
         # Collect raw files and image files in the directory
         rawFiles = []
         imageFiles = []
-        sidecarFiles = []
         for entry in os.scandir(testPath):
             if isRawFile(entry):
                 rawFiles.append(entry)
             elif isImageFile(entry):
                 imageFiles.append(entry)
-            elif isSidecarFile(entry):
-                sidecarFiles.append(entry)
 
         if len(rawFiles) == 0:
             printNoArg("Skipping directory. There's nothing to do.", 1)
             continue
 
-        printThreeIntArg(
+        printTwoIntArg(
             "Found",
             len(rawFiles),
             "raw files,",
             len(imageFiles),
-            "image files and",
-            len(sidecarFiles),
-            "sidecar files.",
+            "image files.",
             1,
         )
 
-        # Determine raw files to be moved. A raw file is considered if there's a matching image file.
-        rawFilesToMove = []
-        sidecarFilesToMove = []
+        # Determine raw files to be exported. A raw file is considered if there's a matching image file.
+        rawFilesToProcess = []
         for rawFile in rawFiles:
             fileName = os.path.splitext(rawFile.name)[0]
-            if hasMatchingImageFile(fileName, imageFiles):
-                rawFilesToMove.append(rawFile)
+            if not hasMatchingQvFile(fileName, imageFiles):
+                rawFilesToProcess.append(rawFile)
 
-                # Determine sidecar files to be moved. A sidecar file is considered if there's a matching image file.
-                # Remember that the sidecar files have the extension of the file they are sidecar to, i.e.
-                # image.nef has image.nef.xmp and image.jpg has image.jpg.xmp.
-                for sidecarFile in sidecarFiles:
-                    fileName = os.path.splitext(sidecarFile.name)[0]
-                    if hasMatchingSidecarFile(fileName, rawFiles):
-                        sidecarFilesToMove.append(sidecarFile)
-        printTwoIntArg("There are", len(rawFilesToMove), "raw files and", len(sidecarFilesToMove), "sidecar files to move", 1)
+        printOneIntArg("There are", len(rawFilesToProcess), "raw files to process.", 1)
 
-        # Finally move the stuff around
-        if len(rawFiles) - len(rawFilesToMove) != 0:
-            printWarning(str(len(rawFiles) - len(rawFilesToMove)) + " raw files will stay in their original location because there are no matching jpegs.", 1)
-        if len(rawFilesToMove) == 0:
-            printWarning("Skipping directory. No files to move left.", 1)
+        # Now the exporting stuff
+        if len(rawFilesToProcess) == 0:
+            printWarning("Skipping directory. No files to export left.", 1)
             continue
 
-        if not previewFsOperations:
-            rawDir = os.path.join(testPath, "Raw")
-            if os.path.isdir(rawDir):
-                printWarning("Raw directory exists. We might overwrite existing data.", 1)
+        for rawFile in rawFilesToProcess:
+            inFile = rawFile.path
+            outFile = os.path.splitext(rawFile.path)[0] + "_qv.jpg"
+            cmd = 'rawtherapee-cli -q -Y -d -j75 -o "' + outFile + '" -c "' + inFile + '"'
+            printOneStringArg("Executing", cmd, "", 1)
+            if not previewFsOperations:
+                result = os.system(cmd)
+                if result == 0:
+                    printOk(" Export successful.", 1)
+                else:
+                    printError("Export failed: " + str(result), 1)
             else:
-                os.mkdir(rawDir)
-
-            for rawFile in rawFilesToMove:
-                shutil.move(rawFile.path, rawDir)
-            for sidecarFile in sidecarFilesToMove:
-                shutil.move(sidecarFile.path, rawDir)
-        printOk("Raw + sidecar files moved successfully.", 1)
+                printOk("PREVIEW MODE. COMMAND NOT EXECUTED.", 1)
 
     break
