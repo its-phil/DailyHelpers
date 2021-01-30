@@ -97,6 +97,8 @@ if previewFsOperations:
 else:
     printWarning("Preview mode inactive. File system may be modified.")
 
+summaryFilesMoved = 0
+
 # Start the processing loop
 for root, dirs, files in os.walk(rootPath):
     for dir in dirs:
@@ -154,6 +156,8 @@ for root, dirs, files in os.walk(rootPath):
             printWarning("Skipping directory. No files to move left.", 1)
             continue
 
+        summaryFilesMoved += len(rawFilesToMove)
+        
         if not previewFsOperations:
             rawDir = os.path.join(testPath, "Raw")
             if os.path.isdir(rawDir):
@@ -168,3 +172,5 @@ for root, dirs, files in os.walk(rootPath):
         printOk("Raw + sidecar files moved successfully.", 1)
 
     break
+
+printOneIntArg("All done. I moved", summaryFilesMoved, "files.")

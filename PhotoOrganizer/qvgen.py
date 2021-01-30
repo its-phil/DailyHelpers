@@ -87,6 +87,8 @@ if previewFsOperations:
 else:
     printWarning("Preview mode inactive. File system may be modified.")
 
+summaryFilesExported = 0
+
 # Start the processing loop
 for root, dirs, files in os.walk(rootPath):
     for dir in dirs:
@@ -134,6 +136,7 @@ for root, dirs, files in os.walk(rootPath):
             outFile = os.path.splitext(rawFile.path)[0] + "_qv.jpg"
             cmd = 'rawtherapee-cli -q -Y -d -j75 -o "' + outFile + '" -c "' + inFile + '"'
             printOneStringArg("Executing", cmd, "", 1)
+            summaryFilesExported += 1
             if not previewFsOperations:
                 result = os.system(cmd)
                 if result == 0:
@@ -144,3 +147,5 @@ for root, dirs, files in os.walk(rootPath):
                 printOk("PREVIEW MODE. COMMAND NOT EXECUTED.", 1)
 
     break
+
+printOneIntArg("All done. I processed", summaryFilesExported, "files.")
