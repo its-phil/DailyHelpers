@@ -16,7 +16,7 @@ ForEach ($dir in Get-ChildItem -Path $rootDir -Directory) {
         }
     }
 }
-$maxWidth = - $maxWidth - 2 # magic transformation ;)
+$maxWidth = $maxWidth + 6 # magic transformation ;)
 
 # Print the current branch of all git repos
 ForEach ($dir in Get-ChildItem -Path $rootDir -Directory) {
@@ -26,7 +26,8 @@ ForEach ($dir in Get-ChildItem -Path $rootDir -Directory) {
         
         $branch = Invoke-Expression "git rev-parse --abbrev-ref HEAD"
         Write-Host $( "> Directory ") -NoNewLine
-        Write-Host $( "{0,$($maxWidth)}" -f "$($dir.Name)") -NoNewLine -ForegroundColor White
+        $outName = $dir.Name + " "
+        Write-Host "$($outName.PadRight($maxWidth, '.')) " -NoNewLine -ForegroundColor White
         
         if ($branch -eq "master") {
             Write-Host $branch -ForegroundColor Cyan
